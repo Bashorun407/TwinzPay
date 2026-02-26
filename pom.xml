@@ -23,6 +23,7 @@
     <!-- Modules -->
     <modules>
         <module>discovery-server</module>
+        <module>user-service</module>
     </modules>
 
     <!-- Properties -->
