@@ -24,6 +24,7 @@
     <modules>
         <module>discovery-server</module>
         <module>user-service</module>
+        <module>api-gateway</module>
     </modules>
 
     <!-- Properties -->
