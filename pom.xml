@@ -25,6 +25,7 @@
         <module>discovery-server</module>
         <module>user-service</module>
         <module>api-gateway</module>
+        <module>payment-service</module>
     </modules>
 
     <!-- Properties -->
