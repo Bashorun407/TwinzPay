@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/twinzpay_payment_db
     username: root # Your MySQL username
-    password: password # Your MySQL password
+    password: 1234qwer # Your MySQL password
   jpa:
     hibernate:
       ddl-auto: update
