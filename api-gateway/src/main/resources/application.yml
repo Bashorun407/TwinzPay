@@ -13,6 +13,11 @@ spring:
           predicates:
             - Path=/api/v1/users/**
 
+        - id: payment-service
+          # lb:// tells the gateway to Load Balance using Eureka names
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
 eureka:
   client:
     service-url:
