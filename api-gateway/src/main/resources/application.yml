@@ -7,17 +7,18 @@ spring:
   cloud:
     gateway:
       routes:
+        # Route to the User Service
         - id: user-service
-          # lb:// tells the gateway to Load Balance using Eureka names
           uri: lb://USER-SERVICE
           predicates:
             - Path=/api/v1/users/**
 
+        # Route to the Payment Service
         - id: payment-service
-          # lb:// tells the gateway to Load Balance using Eureka names
           uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/api/v1/payments/**
+
 eureka:
   client:
     service-url:
