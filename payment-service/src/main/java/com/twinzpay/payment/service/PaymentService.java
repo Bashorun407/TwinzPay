@@ -1,0 +1,69 @@
+package com.twinzpay.payment.service;
+
+import com.twinzpay.payment.dto.PaystackInitializeRequest;
+import com.twinzpay.payment.dto.PaystackInitializeResponse;
+import com.twinzpay.payment.entity.Payment;
+import com.twinzpay.payment.repository.PaymentRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Service
+public class PaymentService {
+    private final PaymentRepository paymentRepository;
+    private final WebClient webClient;
+
+    // Constructor Injection is an intermediate-level best practice
+    public PaymentService(
+            PaymentRepository paymentRepository,
+            WebClient.Builder webClientBuilder,
+            @Value("${paystack.base-url}") String baseUrl,
+            @Value("${paystack.secret-key}") String secretKey) {
+
+        this.paymentRepository = paymentRepository;
+
+        // Build the WebClient once with default headers to keep code clean
+        this.webClient = webClientBuilder.baseUrl(baseUrl)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + secretKey)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
+
+    public PaystackInitializeResponse initializePayment(String email, BigDecimal amount) {
+        // 1. Generate a unique reference for this specific transaction
+        String reference = UUID.randomUUID().toString();
+
+        // 2. Save payment to our local database as PENDING
+        Payment payment = Payment.builder()
+                .userEmail(email)
+                .amount(amount)
+                .reference(reference)
+                .status("PENDING")
+                .build();
+        paymentRepository.save(payment);
+
+        // 3. Prepare the Paystack request
+        // Note: Paystack expects the amount in Kobo (so we multiply the Naira amount by 100)
+        String amountInKobo = amount.multiply(BigDecimal.valueOf(100)).toBigInteger().toString();
+
+        PaystackInitializeRequest request = PaystackInitializeRequest.builder()
+                .email(email)
+                .amount(amountInKobo)
+                .reference(reference)
+                .callback_url("http://localhost:8080/api/v1/payments/verify") // Where Paystack redirects after payment
+                .build();
+
+        // 4. Call the Paystack API securely
+        return webClient.post()
+                .uri("/transaction/initialize")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(PaystackInitializeResponse.class)
+                .block(); // .block() safely converts the asynchronous WebFlux call to a synchronous response
+    }
+}
