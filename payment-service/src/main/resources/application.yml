@@ -20,5 +20,5 @@ eureka:
 
 # Custom properties for Paystack integration
 paystack:
-  secret-key: sk_test_your_paystack_test_key_here # Replace with your actual test key later
+  secret-key: sk_test_efb080988a2d7f152c9a36e92afa1c29d85c863e # Replace with your actual test key later
   base-url: https://api.paystack.co
