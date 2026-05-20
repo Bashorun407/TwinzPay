@@ -1,5 +1,7 @@
 package com.twinzpay.payment.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twinzpay.payment.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -9,75 +11,70 @@ import org.springframework.web.bind.annotation.*;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 
 @RestController
 @RequestMapping("/api/v1/payments/webhook")
 public class WebhookController {
     private final PaymentRepository paymentRepository;
+    private final ObjectMapper objectMapper; // Spring's built-in JSON parser
+    private final String secretKey;
 
-    @Value("${paystack.secret-key}")
-    private String secretKey;
-
-    public WebhookController(PaymentRepository paymentRepository) {
+    public WebhookController(
+            PaymentRepository paymentRepository,
+            ObjectMapper objectMapper,
+            @Value("${paystack.secret-key}") String secretKey) {
         this.paymentRepository = paymentRepository;
+        this.objectMapper = objectMapper;
+        this.secretKey = secretKey;
     }
 
     @PostMapping
     public ResponseEntity<String> handlePaystackWebhook(
             @RequestBody String requestBody,
-            @RequestHeader("x-paystack-signature") String hmacSignature) {
+            @RequestHeader(value = "x-paystack-signature", required = false) String signature) {
 
         try {
-            // 1. Cryptographically verify that the event originated from Paystack
-            if (!isSignatureValid(requestBody, hmacSignature)) {
+            // 1. Verify the request actually came from Paystack
+            if (signature == null || !isValidSignature(requestBody, signature)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid signature");
             }
 
-            // 2. Simple text checking for the event payload to keep dependencies lightweight
-            // An intermediate approach looks for specific sub-strings in the raw JSON payload
-            if (requestBody.contains("\"event\":\"charge.success\"")) {
-                // Extract the reference code string out of the JSON string text
-                String reference = extractFieldFromJson(requestBody, "reference");
+            // 2. Parse the JSON body cleanly
+            JsonNode payload = objectMapper.readTree(requestBody);
+            String event = payload.path("event").asText();
+
+            // 3. If the event is a successful charge, update the database
+            if ("charge.success".equals(event)) {
+                String reference = payload.path("data").path("reference").asText();
 
                 paymentRepository.findByReference(reference).ifPresent(payment -> {
                     payment.setStatus("SUCCESS");
                     paymentRepository.save(payment);
-                    System.out.println("Webhook verified & processed payment ref: " + reference);
                 });
             }
 
-            // Paystack expects a rapid 200 OK acknowledgment to prevent multiple retries
-            return ResponseEntity.ok("Event Processed");
+            // Paystack expects a 200 OK immediately so it doesn't keep resending the event
+            return ResponseEntity.ok("Webhook Received");
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Webhook Error");
         }
     }
 
-    private boolean isSignatureValid(String rawBody, String headerSignature) throws Exception {
-        Mac sha512Hmac = Mac.getInstance("HmacSHA512");
+    // Standard cryptographic method to verify Paystack's HMAC SHA512 signature
+    private boolean isValidSignature(String body, String signature) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA512");
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
-        sha512Hmac.init(secretKeySpec);
+        mac.init(secretKeySpec);
 
-        byte[] macData = sha512Hmac.doFinal(rawBody.getBytes(StandardCharsets.UTF_8));
-
-        // Convert the byte array into a readable Hex String representation
+        byte[] bytes = mac.doFinal(body.getBytes(StandardCharsets.UTF_8));
         StringBuilder hexString = new StringBuilder();
-        for (byte b : macData) {
+        for (byte b : bytes) {
             String hex = Integer.toHexString(0xff & b);
             if (hex.length() == 1) hexString.append('0');
             hexString.append(hex);
         }
 
-        // Constant-time comparison string matching to protect against timing attacks
-        return MessageDigest.isEqual(hexString.toString().getBytes(), headerSignature.getBytes());
-    }
-
-    private String extractFieldFromJson(String json, String field) {
-        String pattern = "\"" + field + "\":\"";
-        int start = json.indexOf(pattern) + pattern.length();
-        int end = json.indexOf("\"", start);
-        return json.substring(start, end);
+        return hexString.toString().equals(signature);
     }
 }
