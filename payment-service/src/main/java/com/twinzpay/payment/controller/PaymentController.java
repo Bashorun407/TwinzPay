@@ -1,12 +1,10 @@
 package com.twinzpay.payment.controller;
 
 import com.twinzpay.payment.dto.PaystackInitializeResponse;
+import com.twinzpay.payment.entity.Payment;
 import com.twinzpay.payment.service.PaymentService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
@@ -30,4 +28,11 @@ public class PaymentController {
             PaystackInitializeResponse response = paymentService.initializePayment(email, amount);
             return ResponseEntity.ok(response);
         }
+
+    // Endpoint to verify a transaction
+    @GetMapping("/verify")
+    public ResponseEntity<Payment> verifyPayment(@RequestParam String reference) {
+        Payment verifiedPayment = paymentService.verifyPayment(reference);
+        return ResponseEntity.ok(verifiedPayment);
+    }
 }
