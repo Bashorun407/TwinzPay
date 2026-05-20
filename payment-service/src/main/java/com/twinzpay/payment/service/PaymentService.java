@@ -2,6 +2,7 @@ package com.twinzpay.payment.service;
 
 import com.twinzpay.payment.dto.PaystackInitializeRequest;
 import com.twinzpay.payment.dto.PaystackInitializeResponse;
+import com.twinzpay.payment.dto.PaystackVerifyResponse;
 import com.twinzpay.payment.entity.Payment;
 import com.twinzpay.payment.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class PaymentService {
                 .build();
     }
 
+    //1. Initialize payment method
     public PaystackInitializeResponse initializePayment(String email, BigDecimal amount) {
         // 1. Generate a unique reference for this specific transaction
         String reference = UUID.randomUUID().toString();
@@ -65,5 +67,28 @@ public class PaymentService {
                 .retrieve()
                 .bodyToMono(PaystackInitializeResponse.class)
                 .block(); // .block() safely converts the asynchronous WebFlux call to a synchronous response
+    }
+
+    //2. Verify Payment method
+    public Payment verifyPayment(String reference) {
+        // 1. Call Paystack GET API to verify the transaction status
+        PaystackVerifyResponse response = webClient.get()
+                .uri("/transaction/verify/" + reference)
+                .retrieve()
+                .bodyToMono(PaystackVerifyResponse.class)
+                .block();
+
+        // 2. Find the payment in our local database
+        Payment payment = paymentRepository.findByReference(reference)
+                .orElseThrow(() -> new RuntimeException("Payment reference not found: " + reference));
+
+        // 3. If Paystack confirms success, update our database record
+        if (response != null && response.isStatus() && "success".equalsIgnoreCase(response.getData().getStatus())) {
+            payment.setStatus("SUCCESS");
+        } else {
+            payment.setStatus("FAILED");
+        }
+
+        return paymentRepository.save(payment);
     }
 }
