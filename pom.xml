@@ -26,6 +26,7 @@
         <module>user-service</module>
         <module>api-gateway</module>
         <module>payment-service</module>
+        <module>utility-service</module>
     </modules>
 
     <!-- Properties -->
