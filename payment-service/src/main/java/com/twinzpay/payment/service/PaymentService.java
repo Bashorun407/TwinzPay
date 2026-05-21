@@ -51,13 +51,16 @@ public class PaymentService {
 
         // 3. Prepare the Paystack request
         // Note: Paystack expects the amount in Kobo (so we multiply the Naira amount by 100)
-        String amountInKobo = amount.multiply(BigDecimal.valueOf(100)).toBigInteger().toString();
+        // OPTIMIZED: Safe scaling and rounding to avoid ArithmeticExceptions
+        String amountInKobo = amount.multiply(new BigDecimal("100"))
+                .setScale(0, java.math.RoundingMode.HALF_UP)
+                .toPlainString();
 
         PaystackInitializeRequest request = PaystackInitializeRequest.builder()
                 .email(email)
                 .amount(amountInKobo)
                 .reference(reference)
-                .callback_url("http://localhost:8080/api/v1/payments/verify") // Where Paystack redirects after payment
+                .callback_url("http://localhost:8080/api/v1/payments/verify")
                 .build();
 
         // 4. Call the Paystack API securely

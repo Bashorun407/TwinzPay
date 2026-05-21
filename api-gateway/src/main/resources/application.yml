@@ -19,6 +19,12 @@ spring:
           predicates:
             - Path=/api/v1/payments/**
 
+        # Route to the Utility Service
+        - id: utility-service
+          uri: lb://UTILITY-SERVICE
+          predicates:
+            - Path=/api/v1/utilities/**
+
 eureka:
   client:
     service-url:
