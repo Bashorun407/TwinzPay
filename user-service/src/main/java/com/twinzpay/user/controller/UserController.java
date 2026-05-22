@@ -1,5 +1,6 @@
 package com.twinzpay.user.controller;
 
+import com.twinzpay.user.dto.AuthResponseDto;
 import com.twinzpay.user.dto.LoginRequestDto;
 import com.twinzpay.user.dto.RegisterRequestDto;
 import com.twinzpay.user.dto.UserResponseDto;
@@ -28,8 +29,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> login(@RequestBody LoginRequestDto request) {
-        UserResponseDto response = userService.loginUser(request);
+    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto request) {
+        AuthResponseDto response = userService.loginUser(request);
         return ResponseEntity.ok(response);
     }
 }

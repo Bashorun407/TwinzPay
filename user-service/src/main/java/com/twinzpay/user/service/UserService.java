@@ -1,10 +1,12 @@
 package com.twinzpay.user.service;
 
+import com.twinzpay.user.dto.AuthResponseDto;
 import com.twinzpay.user.dto.LoginRequestDto;
 import com.twinzpay.user.dto.RegisterRequestDto;
 import com.twinzpay.user.dto.UserResponseDto;
 import com.twinzpay.user.entity.User;
 import com.twinzpay.user.repository.UserRepository;
+import com.twinzpay.user.util.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Transactional
@@ -52,7 +56,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponseDto loginUser(LoginRequestDto request) {
+    public AuthResponseDto loginUser(LoginRequestDto request) {
         // 1. Find user by email
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
@@ -62,12 +66,17 @@ public class UserService {
             throw new RuntimeException("Invalid email or password"); // Keep error message vague for security
         }
 
-        // 3. Return user details
-        return new UserResponseDto(
+        // 3. generate token
+        String token = jwtUtil.generateToken(request.email());
+
+        // 4. Return user details
+        UserResponseDto userResponseDto = new UserResponseDto(
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhoneNumber()
         );
+
+        return new AuthResponseDto(token, userResponseDto);
     }
 }
