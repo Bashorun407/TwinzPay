@@ -1,5 +1,6 @@
 package com.twinzpay.payment.controller;
 
+import com.twinzpay.payment.dto.BillPaymentRequest;
 import com.twinzpay.payment.dto.PaystackInitializeResponse;
 import com.twinzpay.payment.entity.Payment;
 import com.twinzpay.payment.service.PaymentService;
@@ -22,10 +23,9 @@ public class PaymentController {
         // Endpoint to initialize a transaction
         @PostMapping("/initialize")
         public ResponseEntity<PaystackInitializeResponse> initializePayment(
-                @RequestParam String email,
-                @RequestParam BigDecimal amount) {
+                @RequestBody BillPaymentRequest request) {
 
-            PaystackInitializeResponse response = paymentService.initializePayment(email, amount);
+            PaystackInitializeResponse response = paymentService.initializePayment(request);
             return ResponseEntity.ok(response);
         }
 
