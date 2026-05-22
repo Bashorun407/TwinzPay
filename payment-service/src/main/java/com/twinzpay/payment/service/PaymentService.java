@@ -1,5 +1,6 @@
 package com.twinzpay.payment.service;
 
+import com.twinzpay.payment.dto.BillPaymentRequest;
 import com.twinzpay.payment.dto.PaystackInitializeRequest;
 import com.twinzpay.payment.dto.PaystackInitializeResponse;
 import com.twinzpay.payment.dto.PaystackVerifyResponse;
@@ -36,28 +37,30 @@ public class PaymentService {
     }
 
     //1. Initialize payment method
-    public PaystackInitializeResponse initializePayment(String email, BigDecimal amount) {
+    public PaystackInitializeResponse initializePayment(BillPaymentRequest request) {
         // 1. Generate a unique reference for this specific transaction
         String reference = UUID.randomUUID().toString();
 
         // 2. Save payment to our local database as PENDING
         Payment payment = Payment.builder()
-                .userEmail(email)
-                .amount(amount)
+                .userEmail(request.email())
+                .amount(request.amount())
                 .reference(reference)
                 .status("PENDING")
+                .billPlanId(request.billPlanId())
+                .targetAccount(request.targetAccount())
                 .build();
         paymentRepository.save(payment);
 
         // 3. Prepare the Paystack request
         // Note: Paystack expects the amount in Kobo (so we multiply the Naira amount by 100)
         // OPTIMIZED: Safe scaling and rounding to avoid ArithmeticExceptions
-        String amountInKobo = amount.multiply(new BigDecimal("100"))
+        String amountInKobo = request.amount().multiply(new BigDecimal("100"))
                 .setScale(0, java.math.RoundingMode.HALF_UP)
                 .toPlainString();
 
-        PaystackInitializeRequest request = PaystackInitializeRequest.builder()
-                .email(email)
+        PaystackInitializeRequest payStackRequest = PaystackInitializeRequest.builder()
+                .email(request.email())
                 .amount(amountInKobo)
                 .reference(reference)
                 .callback_url("http://localhost:8080/api/v1/payments/verify")
