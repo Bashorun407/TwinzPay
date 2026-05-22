@@ -26,6 +26,12 @@ public class Payment {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "bill_plan_id")
+    private Long billPlanId;
+
+    @Column(name = "target_account")
+    private String targetAccount; // The phone number, smart card, or meter number
+
     // This is the unique code Paystack uses to identify the transaction
     @Column(unique = true, nullable = false)
     private String reference;
