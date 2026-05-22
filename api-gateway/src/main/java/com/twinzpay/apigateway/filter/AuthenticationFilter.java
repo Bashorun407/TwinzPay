@@ -5,7 +5,9 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
     private final RouteValidator validator;
@@ -16,6 +18,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         this.validator = validator;
         this.jwtUtil = jwtUtil;
     }
+
 
     @Override
     public GatewayFilter apply(Config config) {
