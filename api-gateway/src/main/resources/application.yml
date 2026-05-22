@@ -18,12 +18,16 @@ spring:
           uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/api/v1/payments/**
+          filters:
+            - AuthenticationFilter
 
         # Route to the Utility Service
         - id: utility-service
           uri: lb://UTILITY-SERVICE
           predicates:
             - Path=/api/v1/utilities/**
+          filters:
+            - AuthenticationFilter
 
 eureka:
   client:
