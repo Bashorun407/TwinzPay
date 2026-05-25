@@ -1,0 +1,34 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: scheduler-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/twinzpay_scheduler_db
+    username: root          # Change to your local MySQL username
+    password: 1234qwer      # Change to your local MySQL password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  # Email Configuration (Mock SMTP Server for local testing)
+  mail:
+    host: smtp.gmail.com # If using a local mail dev tool, change to 'localhost'
+    port: 587                   # Common mailtrap port (or 1025 for local dev tools)
+    username: lytwind25@gmail.com
+    password: dsallllfnucsozkm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# Ensure the Scheduler Service has the API Gateway route configured
