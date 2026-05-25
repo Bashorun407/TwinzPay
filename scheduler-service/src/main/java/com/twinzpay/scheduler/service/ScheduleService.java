@@ -23,6 +23,12 @@ public class ScheduleService {
         if (request.dayOfMonth() < 1 || request.dayOfMonth() > 31) {
             throw new IllegalArgumentException("Invalid day of the month. Must be between 1 and 31.");
         }
+        if (request.targetHour() < 0 || request.targetHour() > 23) {
+            throw new IllegalArgumentException("Invalid hour. Must be between 0 and 23.");
+        }
+        if (request.targetMinute() < 0 || request.targetMinute() > 59) {
+            throw new IllegalArgumentException("Invalid minute. Must be between 0 and 59.");
+        }
 
         PaymentSchedule schedule = PaymentSchedule.builder()
                 .userEmail(request.userEmail())
@@ -30,6 +36,8 @@ public class ScheduleService {
                 .targetAccount(request.targetAccount())
                 .amount(request.amount())
                 .dayOfMonth(request.dayOfMonth())
+                .targetHour(request.targetHour())
+                .targetMinute(request.targetMinute())
                 .status("ACTIVE")
                 .threeHourWarningSent(false)
                 .thirtyMinWarningSent(false)

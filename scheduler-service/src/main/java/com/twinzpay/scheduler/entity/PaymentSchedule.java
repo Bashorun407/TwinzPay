@@ -34,6 +34,12 @@ public class PaymentSchedule {
     private int dayOfMonth; // e.g., 26
 
     @Column(nullable = false)
+    private int targetHour; // 0-23 (e.g., 14 for 2:00 PM)
+
+    @Column(nullable = false)
+    private int targetMinute; // 0-59 (e.g., 30 for 2:30 PM)
+
+    @Column(nullable = false)
     private String status; // ACTIVE, PAUSED, CANCELLED
 
     // State machine trackers for the current execution cycle

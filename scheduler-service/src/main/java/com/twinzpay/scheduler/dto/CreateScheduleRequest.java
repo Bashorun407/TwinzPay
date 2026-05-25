@@ -7,6 +7,8 @@ public record CreateScheduleRequest(
         Long billPlanId,
         String targetAccount,
         BigDecimal amount,
-        int dayOfMonth
+        int dayOfMonth,
+        int targetHour,
+        int targetMinute
 ) {
 }
