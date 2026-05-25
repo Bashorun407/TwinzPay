@@ -29,6 +29,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        # Append this under spring.cloud.gateway.routes alongside the others:
+        - id: scheduler-service
+          uri: lb://SCHEDULER-SERVICE
+          predicates:
+            - Path=/api/v1/schedules/**
+          filters:
+            - AuthenticationFilter
 eureka:
   client:
     service-url:
