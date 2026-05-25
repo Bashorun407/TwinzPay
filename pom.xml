@@ -27,6 +27,7 @@
         <module>api-gateway</module>
         <module>payment-service</module>
         <module>utility-service</module>
+        <module>scheduler-service</module>
     </modules>
 
     <!-- Properties -->
