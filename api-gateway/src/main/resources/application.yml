@@ -29,7 +29,7 @@ spring:
           filters:
             - AuthenticationFilter
 
-        # Append this under spring.cloud.gateway.routes alongside the others:
+        # Route to the Scheduler Service:
         - id: scheduler-service
           uri: lb://SCHEDULER-SERVICE
           predicates:
