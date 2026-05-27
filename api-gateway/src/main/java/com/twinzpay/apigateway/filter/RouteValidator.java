@@ -13,6 +13,8 @@ public class RouteValidator {
             "/api/v1/users/register",
             "/api/v1/users/login",
             "/api/v1/payments/webhook",
+            "/v3/api-docs",        // Allows discovery of microservice schemas
+            "/swagger-ui",         // Allows loading the UI layout assets
             "/eureka"
     );
 
