@@ -17,3 +17,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+# Add this at the root level of your file
+springdoc:
+  api-docs:
+    path: /api/v1/utilities/v3/api-docs

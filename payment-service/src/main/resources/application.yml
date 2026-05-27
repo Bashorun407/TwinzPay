@@ -22,3 +22,8 @@ eureka:
 paystack:
   secret-key: sk_test_efb080988a2d7f152c9a36e92afa1c29d85c863e # Replace with your actual test key later
   base-url: https://api.paystack.co
+
+# Add this at the root level of your file
+springdoc:
+  api-docs:
+    path: /api/v1/payments/v3/api-docs

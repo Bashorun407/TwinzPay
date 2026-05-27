@@ -24,3 +24,8 @@ jwt:
   # For local development, this 256-bit string will work.
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   expiration: 86400000 # 1 day in milliseconds
+
+# Add this at the root level of your file
+springdoc:
+  api-docs:
+    path: /api/v1/users/v3/api-docs
