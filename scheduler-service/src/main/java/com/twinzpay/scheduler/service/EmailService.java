@@ -14,7 +14,7 @@ public class EmailService {
 
     public void sendPaymentWarning(String toEmail, String timeRemaining, String amount, String account) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("automation@twinzpay.com");
+        message.setFrom("lytwind25@gmail.com");
         message.setTo(toEmail);
         message.setSubject("Upcoming Payment Reminder: " + timeRemaining);
 
