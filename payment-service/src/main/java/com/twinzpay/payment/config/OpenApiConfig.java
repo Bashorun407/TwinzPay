@@ -1,6 +1,10 @@
 package com.twinzpay.payment.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,7 +12,18 @@ import org.springframework.context.annotation.Configuration;
 @OpenAPIDefinition(
         servers = {
                 @Server(url = "http://localhost:8080", description = "API Gateway")
+        },
+        security = {
+                @SecurityRequirement(name = "bearerAuth") // Forces all endpoints to use the scheme below
         }
+)
+@SecurityScheme(
+        name = "bearerAuth",
+        description = "Paste your JWT token here (without the 'Bearer ' prefix)",
+        scheme = "bearer",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        in = SecuritySchemeIn.HEADER
 )
 public class OpenApiConfig {
 }
