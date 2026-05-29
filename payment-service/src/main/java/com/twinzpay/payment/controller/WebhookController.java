@@ -3,6 +3,7 @@ package com.twinzpay.payment.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twinzpay.payment.repository.PaymentRepository;
+import com.twinzpay.payment.service.PaystackWebhookService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +16,15 @@ import java.nio.charset.StandardCharsets;
 @RestController
 @RequestMapping("/api/v1/payments/webhook")
 public class WebhookController {
-    private final PaymentRepository paymentRepository;
-    private final ObjectMapper objectMapper; // Spring's built-in JSON parser
+    private final PaystackWebhookService webhookService;
+    private final ObjectMapper objectMapper;
     private final String secretKey;
 
     public WebhookController(
-            PaymentRepository paymentRepository,
+            PaystackWebhookService webhookService,
             ObjectMapper objectMapper,
             @Value("${paystack.secret-key}") String secretKey) {
-        this.paymentRepository = paymentRepository;
+        this.webhookService = webhookService;
         this.objectMapper = objectMapper;
         this.secretKey = secretKey;
     }
@@ -39,21 +40,13 @@ public class WebhookController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid signature");
             }
 
-            // 2. Parse the JSON body cleanly
+            // 2. Parse the JSON body
             JsonNode payload = objectMapper.readTree(requestBody);
-            String event = payload.path("event").asText();
 
-            // 3. If the event is a successful charge, update the database
-            if ("charge.success".equals(event)) {
-                String reference = payload.path("data").path("reference").asText();
+            // 3. Delegate the business logic to the Service
+            webhookService.processWebhookEvent(payload);
 
-                paymentRepository.findByReference(reference).ifPresent(payment -> {
-                    payment.setStatus("SUCCESS");
-                    paymentRepository.save(payment);
-                });
-            }
-
-            // Paystack expects a 200 OK immediately so it doesn't keep resending the event
+            // 4. Return 200 OK immediately to Paystack
             return ResponseEntity.ok("Webhook Received");
 
         } catch (Exception e) {
