@@ -59,22 +59,8 @@ public class PaymentCronJob {
             // Ignore schedules that have already passed for today
             if (minutesLeft < 0) continue;
 
-            // --- NOTIFICATION BLOCKS (T-3h, T-30m, T-15m) ---
-            if (minutesLeft <= 180 && !schedule.isThreeHourWarningSent()) {
-                sendNotification(schedule, "3 Hours");
-                schedule.setThreeHourWarningSent(true);
-            }
-            else if (minutesLeft <= 30 && !schedule.isThirtyMinWarningSent()) {
-                sendNotification(schedule, "30 Minutes");
-                schedule.setThirtyMinWarningSent(true);
-            }
-            else if (minutesLeft <= 15 && !schedule.isFifteenMinWarningSent()) {
-                sendNotification(schedule, "15 Minutes");
-                schedule.setFifteenMinWarningSent(true);
-            }
-
-            // --- ZERO HOUR EXECUTION BLOCK ---
-            else if (minutesLeft == 0) {
+            // 5. ABSOLUTE PRIORITY: ZERO HOUR EXECUTION
+            if (minutesLeft == 0) {
                 System.out.println("ZERO HOUR: Triggering Auto-Charge for " + schedule.getUserEmail());
 
                 boolean paymentSuccess = triggerInternalPayment(schedule);
@@ -87,15 +73,36 @@ public class PaymentCronJob {
                     schedule.setThreeHourWarningSent(false);
                     schedule.setThirtyMinWarningSent(false);
                     schedule.setFifteenMinWarningSent(false);
+                    schedule.setStatus("ACTIVE"); // Ensure it remains active for next month
 
                     sendSuccessReceipt(schedule);
                 } else {
                     System.err.println("Auto-Charge Failed for " + schedule.getUserEmail());
-                    // In a production environment, you would trigger a "Payment Failed" email here
+
+                    // Suspend the schedule to prevent infinite retry loops on a dead card
+                    schedule.setStatus("SUSPENDED");
+                    sendFailureNotice(schedule);
+                }
+            }
+            // 6. SECONDARY PRIORITY: WARNING NOTIFICATIONS
+            else if (minutesLeft > 0) {
+                // Independent 'if' statements ensure that if a schedule is created late,
+                // it can catch up and send multiple delayed warnings in a single minute.
+                if (minutesLeft <= 180 && !schedule.isThreeHourWarningSent()) {
+                    sendNotification(schedule, "3 Hours");
+                    schedule.setThreeHourWarningSent(true);
+                }
+                if (minutesLeft <= 30 && !schedule.isThirtyMinWarningSent()) {
+                    sendNotification(schedule, "30 Minutes");
+                    schedule.setThirtyMinWarningSent(true);
+                }
+                if (minutesLeft <= 15 && !schedule.isFifteenMinWarningSent()) {
+                    sendNotification(schedule, "15 Minutes");
+                    schedule.setFifteenMinWarningSent(true);
                 }
             }
 
-            // 5. Save the updated states (flags and execution dates) back to the database
+            // 7. Save the updated states (flags and execution dates) back to the database
             repository.save(schedule);
         }
     }
@@ -137,5 +144,11 @@ public class PaymentCronJob {
 
     private void sendSuccessReceipt(PaymentSchedule schedule) {
         System.out.println("Receipt sent to " + schedule.getUserEmail() + " for successful auto-debit.");
+        // Implement actual email template sending here if desired
+    }
+
+    private void sendFailureNotice(PaymentSchedule schedule) {
+        System.out.println("Failure notice sent to " + schedule.getUserEmail() + ". Schedule suspended.");
+        // Implement actual email template sending here to notify user to update their card
     }
 }
