@@ -50,4 +50,26 @@ public class ScheduleService {
     public List<PaymentSchedule> getActiveSchedulesForDay(int day) {
         return repository.findByDayOfMonthAndStatus(day, "ACTIVE");
     }
+
+    public PaymentSchedule reactivateSchedule(Long scheduleId, String userEmail) {
+        // 1. Find the schedule by ID
+        PaymentSchedule schedule = repository.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("Schedule not found"));
+
+        // 2. Security Check: Ensure the user actually owns this schedule
+        if (!schedule.getUserEmail().equals(userEmail)) {
+            throw new RuntimeException("Unauthorized: You cannot modify this schedule");
+        }
+
+        // 3. Prevent unnecessary database calls if it is already active
+        if ("ACTIVE".equals(schedule.getStatus())) {
+            return schedule;
+        }
+
+        // 4. Flip the status back to ACTIVE
+        schedule.setStatus("ACTIVE");
+
+        // 5. Save and return the updated schedule
+        return repository.save(schedule);
+    }
 }
