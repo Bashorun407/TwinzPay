@@ -37,3 +37,11 @@ eureka:
 springdoc:
   api-docs:
     path: /api/v1/schedules/v3/api-docs
+
+# Resilience4j Retry Configuration for the Payment Service
+  resilience4j:
+    retry:
+      instances:
+        paymentService:
+          max-attempts: 3
+          wait-duration: 2s
