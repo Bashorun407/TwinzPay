@@ -26,12 +26,11 @@ spring:
           starttls:
             enable: true
 
+# Ensure the Scheduler Service has the API Gateway route configured
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-
-# Ensure the Scheduler Service has the API Gateway route configured
 
 # Add this at the root level of your file
 springdoc:
