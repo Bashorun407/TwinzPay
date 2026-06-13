@@ -33,28 +33,29 @@ public class PaymentCronJob {
     @Transactional
     public void trackAndNotifySchedules() {
         LocalDateTime now = LocalDateTime.now();
-        int today = now.getDayOfMonth();
 
-        // 1. Fetch all ACTIVE schedules for today
+        // 1. TRUNCATE SECONDS: This synchronizes the clock to prevent the early-firing bug!
+        LocalDateTime truncatedNow = now.withSecond(0).withNano(0);
+        int today = truncatedNow.getDayOfMonth();
+
+        // 2. Fetch all ACTIVE schedules for today
         List<PaymentSchedule> todaysSchedules = repository.findByDayOfMonthAndStatus(today, "ACTIVE");
 
         for (PaymentSchedule schedule : todaysSchedules) {
 
-            // 2. Anti-Duplicate Lock: Skip if already paid successfully THIS month
+            // 3. Anti-Duplicate Lock: Skip if already paid successfully THIS month
             if (schedule.getLastExecutedMonth() != null &&
-                    YearMonth.from(schedule.getLastExecutedMonth()).equals(YearMonth.from(now))) {
+                    YearMonth.from(schedule.getLastExecutedMonth()).equals(YearMonth.from(truncatedNow))) {
                 continue;
             }
 
-            // 3. Construct the exact execution time for today
-            LocalDateTime executionTime = now
+            // 4. Base the execution time strictly on the truncated clock
+            LocalDateTime executionTime = truncatedNow
                     .withHour(schedule.getTargetHour())
-                    .withMinute(schedule.getTargetMinute())
-                    .withSecond(0)
-                    .withNano(0);
+                    .withMinute(schedule.getTargetMinute());
 
-            // 4. Calculate how many minutes are left
-            long minutesLeft = Duration.between(now, executionTime).toMinutes();
+            // Calculate exact minutes left
+            long minutesLeft = Duration.between(truncatedNow, executionTime).toMinutes();
 
             // Ignore schedules that have already passed for today
             if (minutesLeft < 0) continue;
@@ -66,28 +67,21 @@ public class PaymentCronJob {
                 boolean paymentSuccess = triggerInternalPayment(schedule);
 
                 if (paymentSuccess) {
-                    // Mark as executed for this specific month and year
-                    schedule.setLastExecutedMonth(now);
-
-                    // Reset all warning flags so they can trigger again NEXT month
+                    schedule.setLastExecutedMonth(truncatedNow);
                     schedule.setThreeHourWarningSent(false);
                     schedule.setThirtyMinWarningSent(false);
                     schedule.setFifteenMinWarningSent(false);
-                    schedule.setStatus("ACTIVE"); // Ensure it remains active for next month
+                    schedule.setStatus("ACTIVE");
 
                     sendSuccessReceipt(schedule);
                 } else {
                     System.err.println("Auto-Charge Failed for " + schedule.getUserEmail());
-
-                    // Suspend the schedule to prevent infinite retry loops on a dead card
                     schedule.setStatus("SUSPENDED");
                     sendFailureNotice(schedule);
                 }
             }
             // 6. SECONDARY PRIORITY: WARNING NOTIFICATIONS
             else if (minutesLeft > 0) {
-                // Independent 'if' statements ensure that if a schedule is created late,
-                // it can catch up and send multiple delayed warnings in a single minute.
                 if (minutesLeft <= 180 && !schedule.isThreeHourWarningSent()) {
                     sendNotification(schedule, "3 Hours");
                     schedule.setThreeHourWarningSent(true);
@@ -102,11 +96,11 @@ public class PaymentCronJob {
                 }
             }
 
-            // 7. Save the updated states (flags and execution dates) back to the database
             repository.save(schedule);
         }
     }
 
+    // --- RESILIENCE4J RETRY BLOCK ---
     @io.github.resilience4j.retry.annotation.Retry(name = "paymentService", fallbackMethod = "paymentFallback")
     private boolean triggerInternalPayment(PaymentSchedule schedule) {
         // Build the payload
@@ -128,7 +122,6 @@ public class PaymentCronJob {
     // This method is triggered ONLY if the API call fails 3 times in a row
     private boolean paymentFallback(PaymentSchedule schedule, Exception e) {
         System.err.println("CRITICAL: Payment Service is unresponsive after 3 retries. Error: " + e.getMessage());
-        // Return false so the cron job knows the execution failed and can suspend the schedule
         return false;
     }
 
@@ -147,11 +140,9 @@ public class PaymentCronJob {
 
     private void sendSuccessReceipt(PaymentSchedule schedule) {
         System.out.println("Receipt sent to " + schedule.getUserEmail() + " for successful auto-debit.");
-        // Implement actual email template sending here if desired
     }
 
     private void sendFailureNotice(PaymentSchedule schedule) {
         System.out.println("Failure notice sent to " + schedule.getUserEmail() + ". Schedule suspended.");
-        // Implement actual email template sending here to notify user to update their card
     }
 }
