@@ -107,26 +107,29 @@ public class PaymentCronJob {
         }
     }
 
+    @io.github.resilience4j.retry.annotation.Retry(name = "paymentService", fallbackMethod = "paymentFallback")
     private boolean triggerInternalPayment(PaymentSchedule schedule) {
-        try {
-            // Build the payload matching the Payment Service's AutoChargeRequest DTO
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("userEmail", schedule.getUserEmail());
-            requestBody.put("amount", schedule.getAmount());
-            requestBody.put("billPlanId", schedule.getBillPlanId());
+        // Build the payload
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("userEmail", schedule.getUserEmail());
+        requestBody.put("amount", schedule.getAmount());
+        requestBody.put("billPlanId", schedule.getBillPlanId());
 
-            // Fire the request using Eureka routing and the modern RestClient
-            ResponseEntity<Void> response = restClient.post()
-                    .uri("http://PAYMENT-SERVICE/api/v1/internal/payments/auto-charge")
-                    .body(requestBody)
-                    .retrieve()
-                    .toBodilessEntity(); // Efficiently checks status without expecting a JSON response body
+        // Fire the request
+        ResponseEntity<Void> response = restClient.post()
+                .uri("http://PAYMENT-SERVICE/api/v1/internal/payments/auto-charge")
+                .body(requestBody)
+                .retrieve()
+                .toBodilessEntity();
 
-            return response.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-            System.err.println("Internal Payment Call Failed: " + e.getMessage());
-            return false;
-        }
+        return response.getStatusCode().is2xxSuccessful();
+    }
+
+    // This method is triggered ONLY if the API call fails 3 times in a row
+    private boolean paymentFallback(PaymentSchedule schedule, Exception e) {
+        System.err.println("CRITICAL: Payment Service is unresponsive after 3 retries. Error: " + e.getMessage());
+        // Return false so the cron job knows the execution failed and can suspend the schedule
+        return false;
     }
 
     private void sendNotification(PaymentSchedule schedule, String timeRemaining) {
