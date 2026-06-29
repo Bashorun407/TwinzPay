@@ -28,13 +28,12 @@ public class PaymentCronJob {
         this.restClient = restClient;
     }
 
-    // Cron expression: runs at the 0th second of every single minute
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void trackAndNotifySchedules() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. TRUNCATE SECONDS: This synchronizes the clock to prevent the early-firing bug!
+        // 1. TRUNCATE SECONDS: Synchronizes the clock
         LocalDateTime truncatedNow = now.withSecond(0).withNano(0);
         int today = truncatedNow.getDayOfMonth();
 
@@ -43,7 +42,7 @@ public class PaymentCronJob {
 
         for (PaymentSchedule schedule : todaysSchedules) {
 
-            // 3. Anti-Duplicate Lock: Skip if already paid successfully THIS month
+            // 3. Anti-Duplicate Lock
             if (schedule.getLastExecutedMonth() != null &&
                     YearMonth.from(schedule.getLastExecutedMonth()).equals(YearMonth.from(truncatedNow))) {
                 continue;
@@ -54,10 +53,8 @@ public class PaymentCronJob {
                     .withHour(schedule.getTargetHour())
                     .withMinute(schedule.getTargetMinute());
 
-            // Calculate exact minutes left
             long minutesLeft = Duration.between(truncatedNow, executionTime).toMinutes();
 
-            // Ignore schedules that have already passed for today
             if (minutesLeft < 0) continue;
 
             // 5. ABSOLUTE PRIORITY: ZERO HOUR EXECUTION
@@ -82,17 +79,30 @@ public class PaymentCronJob {
             }
             // 6. SECONDARY PRIORITY: WARNING NOTIFICATIONS
             else if (minutesLeft > 0) {
-                if (minutesLeft <= 180 && !schedule.isThreeHourWarningSent()) {
-                    sendNotification(schedule, "3 Hours");
+
+                // Cascade from smallest window to largest.
+                // This ensures if a schedule is created 10 mins before execution, it only sends the 15-min warning.
+                if (minutesLeft <= 15 && !schedule.isFifteenMinWarningSent()) {
+                    System.out.println("CRON DEBUG: Triggering 15-Minute Warning for " + schedule.getUserEmail());
+                    sendNotification(schedule, "15 Minutes");
+
+                    // Mark all as sent to prevent spamming older warnings
+                    schedule.setFifteenMinWarningSent(true);
+                    schedule.setThirtyMinWarningSent(true);
                     schedule.setThreeHourWarningSent(true);
                 }
-                if (minutesLeft <= 30 && !schedule.isThirtyMinWarningSent()) {
+                else if (minutesLeft <= 30 && !schedule.isThirtyMinWarningSent()) {
+                    System.out.println("CRON DEBUG: Triggering 30-Minute Warning for " + schedule.getUserEmail());
                     sendNotification(schedule, "30 Minutes");
+
                     schedule.setThirtyMinWarningSent(true);
+                    schedule.setThreeHourWarningSent(true);
                 }
-                if (minutesLeft <= 15 && !schedule.isFifteenMinWarningSent()) {
-                    sendNotification(schedule, "15 Minutes");
-                    schedule.setFifteenMinWarningSent(true);
+                else if (minutesLeft <= 180 && !schedule.isThreeHourWarningSent()) {
+                    System.out.println("CRON DEBUG: Triggering 3-Hour Warning for " + schedule.getUserEmail());
+                    sendNotification(schedule, "3 Hours");
+
+                    schedule.setThreeHourWarningSent(true);
                 }
             }
 
@@ -103,13 +113,11 @@ public class PaymentCronJob {
     // --- RESILIENCE4J RETRY BLOCK ---
     @io.github.resilience4j.retry.annotation.Retry(name = "paymentService", fallbackMethod = "paymentFallback")
     private boolean triggerInternalPayment(PaymentSchedule schedule) {
-        // Build the payload
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("userEmail", schedule.getUserEmail());
         requestBody.put("amount", schedule.getAmount());
         requestBody.put("billPlanId", schedule.getBillPlanId());
 
-        // Fire the request
         ResponseEntity<Void> response = restClient.post()
                 .uri("http://PAYMENT-SERVICE/api/v1/internal/payments/auto-charge")
                 .body(requestBody)
@@ -119,7 +127,6 @@ public class PaymentCronJob {
         return response.getStatusCode().is2xxSuccessful();
     }
 
-    // This method is triggered ONLY if the API call fails 3 times in a row
     private boolean paymentFallback(PaymentSchedule schedule, Exception e) {
         System.err.println("CRITICAL: Payment Service is unresponsive after 3 retries. Error: " + e.getMessage());
         return false;
@@ -134,7 +141,7 @@ public class PaymentCronJob {
                     schedule.getTargetAccount()
             );
         } catch (Exception e) {
-            System.err.println("Failed to send " + timeRemaining + " warning to " + schedule.getUserEmail());
+            System.err.println("Failed to send " + timeRemaining + " warning to " + schedule.getUserEmail() + ". Error: " + e.getMessage());
         }
     }
 
