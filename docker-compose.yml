@@ -9,7 +9,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root <-- This sets the password for the DOCKER database
     ports:
-      - "3306:3306"
+      - "3307:3306"
     networks:
       - twinzpay-network
 
