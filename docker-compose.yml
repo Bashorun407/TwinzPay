@@ -46,9 +46,15 @@ services:
     ports:
       - "8081:8081" # Adjust this port if your user service uses a different one
     environment:
+      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+
+      # 2. Bypasses the metadata check by explicitly setting the Dialect
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+
+      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - mysql-db
@@ -65,9 +71,15 @@ services:
     ports:
       - "8082:8082"
     environment:
+      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/payment_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+
+      # 2. Bypasses the metadata check by explicitly setting the Dialect
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+
+      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - mysql-db
@@ -84,9 +96,15 @@ services:
     ports:
       - "8083:8083"
     environment:
+      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/scheduler_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+
+      # 2. Bypasses the metadata check by explicitly setting the Dialect
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+
+      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - mysql-db
@@ -104,9 +122,15 @@ services:
     ports:
       - "8084:8084"
     environment:
+      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+
+      # 2. Bypasses the metadata check by explicitly setting the Dialect
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+
+      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     depends_on:
       - mysql-db
