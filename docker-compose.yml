@@ -56,6 +56,13 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-retries: "3"
+        # This tags the logs with the name of the container so you can filter them in Grafana
+        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
@@ -81,6 +88,13 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-retries: "3"
+        # This tags the logs with the name of the container so you can filter them in Grafana
+        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
@@ -106,6 +120,13 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-retries: "3"
+        # This tags the logs with the name of the container so you can filter them in Grafana
+        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
@@ -133,6 +154,13 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-retries: "3"
+        # This tags the logs with the name of the container so you can filter them in Grafana
+        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
