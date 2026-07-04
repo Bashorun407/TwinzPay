@@ -7,7 +7,7 @@ services:
     container_name: twinzpay-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root <-- This sets the password for the DOCKER database
+      MYSQL_ROOT_PASSWORD: rootg
     ports:
       - "3307:3306"
     networks:
@@ -123,7 +123,8 @@ services:
       - "8084:8084"
     environment:
       # 1. Forces connection to the Docker MySQL container, not localhost
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility
+        _db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
 
