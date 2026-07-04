@@ -7,7 +7,7 @@ services:
     container_name: twinzpay-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootg
+      MYSQL_ROOT_PASSWORD: root
     ports:
       - "3307:3306"
     networks:
@@ -139,6 +139,31 @@ services:
     networks:
       - twinzpay-network
 
+  # 8. Loki (Log Aggregator)
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: twinzpay-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - twinzpay-network
+
+  # 9. Grafana (Visual Dashboard)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: twinzpay-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - loki
+    networks:
+      - twinzpay-network
+
+  # Network Configuration
 networks:
   twinzpay-network:
     driver: bridge
