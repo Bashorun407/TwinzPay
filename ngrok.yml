@@ -1,8 +1,8 @@
 version: "2"
 tunnels:
-  api:
+  twinzpay-api:
     addr: api-gateway:8080
     proto: http
-  eureka:
+  twinzpay-eureka:
     addr: eureka-server:8761
     proto: http
