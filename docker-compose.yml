@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Database Container (Hosts multiple isolated schemas)
   mysql-db:
     image: mysql:8.0
     container_name: twinzpay-mysql
@@ -13,7 +12,6 @@ services:
     networks:
       - twinzpay-network
 
-  # 2. Service Registry
   eureka-server:
     build:
       context: ./discovery-server
@@ -23,7 +21,6 @@ services:
     networks:
       - twinzpay-network
 
-  # 3. API Gateway
   api-gateway:
     build:
       context: ./api-gateway
@@ -37,39 +34,25 @@ services:
     networks:
       - twinzpay-network
 
-  # 4. User Service (Isolated DB: user_db)
   user-service:
     build:
       context: ./user-service
     container_name: user-service
     restart: on-failure
     ports:
-      - "8081:8081" # Adjust this port if your user service uses a different one
+      - "8081:8081"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-retries: "3"
-        # This tags the logs with the name of the container so you can filter them in Grafana
-        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
     networks:
       - twinzpay-network
 
-  # 5. Payment Service (Isolated DB: payment_db)
   payment-service:
     build:
       context: ./payment-service
@@ -78,30 +61,17 @@ services:
     ports:
       - "8082:8082"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/payment_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-retries: "3"
-        # This tags the logs with the name of the container so you can filter them in Grafana
-        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
     networks:
       - twinzpay-network
 
-  # 6. Scheduler Service (Isolated DB: scheduler_db)
   scheduler-service:
     build:
       context: ./scheduler-service
@@ -110,31 +80,17 @@ services:
     ports:
       - "8083:8083"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/scheduler_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-retries: "3"
-        # This tags the logs with the name of the container so you can filter them in Grafana
-        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
-      - payment-service
     networks:
       - twinzpay-network
 
-  # 7. Utility Service (Isolated DB: utility_db)
   utility-service:
     build:
       context: ./utility-service
@@ -143,55 +99,17 @@ services:
     ports:
       - "8084:8084"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility
-        _db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-        loki-retries: "3"
-        # This tags the logs with the name of the container so you can filter them in Grafana
-        loki-external-labels: job={{.Name}}
     depends_on:
       - mysql-db
       - eureka-server
     networks:
       - twinzpay-network
 
-  # 8. Loki (Log Aggregator)
-  loki:
-    image: grafana/loki:2.9.0
-    container_name: twinzpay-loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - twinzpay-network
-
-  # 9. Grafana (Visual Dashboard)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: twinzpay-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    depends_on:
-      - loki
-    networks:
-      - twinzpay-network
-
-  # Network Configuration
 networks:
   twinzpay-network:
     driver: bridge
