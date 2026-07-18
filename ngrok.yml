@@ -1,8 +1,10 @@
 version: "2"
 tunnels:
-  twinzpay-api:
+  api:
     addr: api-gateway:8080
     proto: http
-  twinzpay-eureka:
+    hostname: api.germproof-oxford-untagged.ngrok-free.dev
+  eureka:
     addr: eureka-server:8761
     proto: http
+    hostname: eureka.germproof-oxford-untagged.ngrok-free.devgit
