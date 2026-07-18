@@ -8,13 +8,16 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     private final JavaMailSender mailSender;
 
+    // Extracted to a constant so you only have to write it once
+    private static final String FROM_EMAIL = "lytwind25@gmail.com";
+
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     public void sendPaymentWarning(String toEmail, String timeRemaining, String amount, String account) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("lytwind25@gmail.com");
+        message.setFrom(FROM_EMAIL);
         message.setTo(toEmail);
         message.setSubject("Upcoming Payment Reminder: " + timeRemaining);
 
@@ -27,6 +30,16 @@ public class EmailService {
                 amount, account, timeRemaining
         );
 
+        message.setText(body);
+        mailSender.send(message);
+    }
+
+    // 👉 THE NEW METHOD: Handles the Feign Client requests and Cron Job receipts
+    public void sendEmail(String toEmail, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(FROM_EMAIL);
+        message.setTo(toEmail);
+        message.setSubject(subject);
         message.setText(body);
         mailSender.send(message);
     }

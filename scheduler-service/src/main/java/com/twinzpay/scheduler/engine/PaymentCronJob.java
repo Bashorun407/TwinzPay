@@ -146,10 +146,21 @@ public class PaymentCronJob {
     }
 
     private void sendSuccessReceipt(PaymentSchedule schedule) {
+        String subject = "Auto-Payment Successful";
+        String body = String.format("Hello,\n\nYour scheduled payment of NGN %s for account %s was successful.\n\nThank you for using TwinzPay!",
+                schedule.getAmount().toPlainString(), schedule.getTargetAccount());
+
+        emailService.sendEmail(schedule.getUserEmail(), subject, body);
         System.out.println("Receipt sent to " + schedule.getUserEmail() + " for successful auto-debit.");
     }
 
     private void sendFailureNotice(PaymentSchedule schedule) {
+        String subject = "Auto-Payment Failed - Schedule Suspended";
+        String body = String.format("Hello,\n\nUnfortunately, your scheduled payment of NGN %s for account %s failed. " +
+                        "Your schedule has been suspended. Please log in to update your payment method and reactivate your schedule.",
+                schedule.getAmount().toPlainString(), schedule.getTargetAccount());
+
+        emailService.sendEmail(schedule.getUserEmail(), subject, body);
         System.out.println("Failure notice sent to " + schedule.getUserEmail() + ". Schedule suspended.");
     }
 }
