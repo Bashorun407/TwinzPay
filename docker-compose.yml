@@ -117,15 +117,9 @@ services:
     environment:
       - NGROK_AUTHTOKEN=3DzSrZjJymPeYIyVp03KNEjZemv_6ousRBdFG45rYsRZGyeCx
     command:
-      - start
-      - --all
-      - --config
-      - /etc/ngrok.yml
-    volumes:
-      - ./ngrok.yml:/etc/ngrok.yml:ro
-    depends_on:
-      - api-gateway
-      - eureka-server
+      - http
+      - --url=https://germproof-oxford-untagged.ngrok-free.dev
+      - api-gateway:8080
     networks:
       - twinzpay-network
 
