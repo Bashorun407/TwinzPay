@@ -7,7 +7,7 @@ services:
     container_name: twinzpay-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootg
+      MYSQL_ROOT_PASSWORD: root
     ports:
       - "3307:3306"
     networks:
