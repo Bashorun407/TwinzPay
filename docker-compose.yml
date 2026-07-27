@@ -7,7 +7,8 @@ services:
     container_name: twinzpay-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      - MYSQL_ROOT_PASSWORD=root
+      - TZ=Africa/Lagos
     ports:
       - "3307:3306"
     networks:
@@ -20,6 +21,8 @@ services:
     container_name: eureka-server
     ports:
       - "8761:8761"
+    environment:
+      - TZ=Africa/Lagos
     networks:
       - twinzpay-network
 
@@ -32,6 +35,7 @@ services:
       - "8080:8080"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - TZ=Africa/Lagos
     depends_on:
       - eureka-server
     networks:
@@ -56,6 +60,7 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - TZ=Africa/Lagos
     depends_on:
       - mysql-db
       - eureka-server
@@ -81,6 +86,7 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - TZ=Africa/Lagos
     depends_on:
       - mysql-db
       - eureka-server
@@ -106,6 +112,8 @@ services:
 
       # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      #Setting the Time Zone to Lagos' own.
+      - TZ=Africa/Lagos
     depends_on:
       - mysql-db
       - eureka-server
@@ -127,6 +135,7 @@ services:
         _db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+      - TZ=Africa/Lagos
 
       # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
@@ -136,6 +145,17 @@ services:
     depends_on:
       - mysql-db
       - eureka-server
+    networks:
+      - twinzpay-network
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    restart: unless-stopped
+    environment:
+      - NGROK_AUTHTOKEN=3DzSrZjJymPeYIyVp03KNEjZemv_6ousRBdFG45rYsRZGyeCx
+      - TZ=Africa/Lagos
+    command: sh -c "ngrok http --url=germproof-oxford-untagged.ngrok-free.dev api-gateway:8080"
     networks:
       - twinzpay-network
 
