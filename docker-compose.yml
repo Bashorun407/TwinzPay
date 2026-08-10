@@ -48,19 +48,17 @@ services:
     container_name: user-service
     restart: on-failure
     ports:
-      - "8081:8081" # Adjust this port if your user service uses a different one
+      - "8081:8081"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - TZ=Africa/Lagos
+      # Injected JWT Secrets
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
     depends_on:
       - mysql-db
       - eureka-server
@@ -76,17 +74,14 @@ services:
     ports:
       - "8082:8082"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/payment_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - TZ=Africa/Lagos
+      # Injected Paystack Secrets
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY}
     depends_on:
       - mysql-db
       - eureka-server
@@ -102,18 +97,14 @@ services:
     ports:
       - "8083:8083"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/scheduler_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      #Setting the Time Zone to Lagos' own.
       - TZ=Africa/Lagos
+      # Injected Email App Password
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
     depends_on:
       - mysql-db
       - eureka-server
@@ -130,24 +121,21 @@ services:
     ports:
       - "8084:8084"
     environment:
-      # 1. Forces connection to the Docker MySQL container, not localhost
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility
-        _db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-root}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - TZ=Africa/Lagos
-
-      # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-
-      # 3. Ensures Eureka routing is correct
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - TZ=Africa/Lagos
+      # Injected Email App Password
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
     depends_on:
       - mysql-db
       - eureka-server
     networks:
       - twinzpay-network
 
+  # Ngrok Tunnel
   ngrok:
     image: ngrok/ngrok:latest
     container_name: ngrok
