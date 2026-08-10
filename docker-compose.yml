@@ -7,7 +7,7 @@ services:
     container_name: twinzpay-mysql
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - TZ=Africa/Lagos
     ports:
       - "3307:3306"
@@ -52,8 +52,8 @@ services:
     environment:
       # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/user_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
 
       # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
@@ -78,8 +78,8 @@ services:
     environment:
       # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/payment_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
 
       # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
@@ -104,8 +104,8 @@ services:
     environment:
       # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/scheduler_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
 
       # 2. Bypasses the metadata check by explicitly setting the Dialect
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
@@ -133,8 +133,8 @@ services:
       # 1. Forces connection to the Docker MySQL container, not localhost
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/utility
         _db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - TZ=Africa/Lagos
 
       # 2. Bypasses the metadata check by explicitly setting the Dialect
@@ -153,7 +153,7 @@ services:
     container_name: ngrok
     restart: unless-stopped
     environment:
-      - NGROK_AUTHTOKEN=3DzSrZjJymPeYIyVp03KNEjZemv_6ousRBdFG45rYsRZGyeCx
+      - NGROK_AUTHTOKEN=${NGROK_TOKEN}
       - TZ=Africa/Lagos
     command: sh -c "ngrok http --url=germproof-oxford-untagged.ngrok-free.dev api-gateway:8080"
     networks:
