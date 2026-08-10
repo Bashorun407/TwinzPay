@@ -6,8 +6,8 @@ spring:
     name: scheduler-service
   datasource:
     url: jdbc:mysql://localhost:3306/twinzpay_scheduler_db
-    username: root          # Change to your local MySQL username
-    password: 1234qwer      # Change to your local MySQL password
+    username: ${DB_USERNAME}          # Change to your local MySQL username
+    password: ${DB_PASSWORD}      # Change to your local MySQL password
   jpa:
     hibernate:
       ddl-auto: update
@@ -17,8 +17,8 @@ spring:
   mail:
     host: smtp.gmail.com # If using a local mail dev tool, change to 'localhost'
     port: 587                   # Common mailtrap port (or 1025 for local dev tools)
-    username: lytwind25@gmail.com
-    password: dsallllfnucsozkm
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
     properties:
       mail:
         smtp:

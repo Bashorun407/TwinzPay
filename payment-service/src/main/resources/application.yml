@@ -6,8 +6,8 @@ spring:
     name: payment-service
   datasource:
     url: jdbc:mysql://localhost:3306/twinzpay_payment_db
-    username: root # Your MySQL username
-    password: 1234qwer # Your MySQL password
+    username: ${DB_USERNAME} # Your MySQL username
+    password: ${DB_PASSWORD} # Your MySQL password
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,7 +20,7 @@ eureka:
 
 # Custom properties for Paystack integration
 paystack:
-  secret-key: sk_test_efb080988a2d7f152c9a36e92afa1c29d85c863e # Replace with your actual test key later
+  secret-key: ${PAYSTACK_SECRET_KEY} # Replace with your actual test key later
   base-url: https://api.paystack.co
 
 # Add this at the root level of your file

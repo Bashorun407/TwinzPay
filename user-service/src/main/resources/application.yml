@@ -6,8 +6,8 @@ spring:
     name: user-service
   datasource:
     url: jdbc:mysql://localhost:3306/twinzpay_user_db
-    username: root # Change this to your MySQL username
-    password: 1234qwer # Change this to your MySQL password
+    username: ${DB_USERNAME} # Change this to your MySQL username
+    password: ${DB_PASSWORD} # Change this to your MySQL password
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,8 +22,8 @@ eureka:
 jwt:
   # This must be a long, complex, Base64-encoded string in production.
   # For local development, this 256-bit string will work.
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 86400000 # 1 day in milliseconds
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION} # 1 day in milliseconds
 
 # Add this at the root level of your file
 springdoc:
