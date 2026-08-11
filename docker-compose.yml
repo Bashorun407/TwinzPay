@@ -106,7 +106,8 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - TZ=Africa/Lagos
       # Injected Email App Password
-      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
     depends_on:
       - mysql-db
       - eureka-server
