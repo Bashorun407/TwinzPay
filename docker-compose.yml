@@ -84,6 +84,7 @@ services:
       - TZ=Africa/Lagos
       # Injected Paystack Secrets
       - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY}
+      - APP_BASE_URL=https://germproof-oxford-untagged.ngrok-free.dev
     depends_on:
       - mysql-db
       - eureka-server
@@ -146,7 +147,7 @@ services:
     environment:
       - NGROK_AUTHTOKEN=${NGROK_TOKEN}
       - TZ=Africa/Lagos
-    command: sh -c "ngrok http --url=germproof-oxford-untagged.ngrok-free.dev api-gateway:8080"
+    command: http --url=germproof-oxford-untagged.ngrok-free.dev api-gateway:8080
     networks:
       - twinzpay-network
 
