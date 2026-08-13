@@ -69,7 +69,7 @@ public class PaymentService {
         // 4. Call the Paystack API securely
         return webClient.post()
                 .uri("/transaction/initialize")
-                .bodyValue(request)
+                .bodyValue(payStackRequest)
                 .retrieve()
                 .bodyToMono(PaystackInitializeResponse.class)
                 .block(); // .block() safely converts the asynchronous WebFlux call to a synchronous response
